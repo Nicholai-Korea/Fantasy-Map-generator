@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3.js Test</title>
+</head>
+<body>
+    <h1>D3.js Test Page</h1>
+    <div id="result"></div>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            const resultDiv = document.getElementById('result');
+            
+            // Check if d3 is loaded
+            if (typeof d3 !== 'undefined') {
+                resultDiv.innerHTML = `<p style="color: green;">D3.js is loaded! Version: ${d3.version}</p>`;
+                
+                // Test Delaunay functionality
+                try {
+                    // Create some test points
+                    const points = [
+                        [100, 100],
+                        [200, 100],
+                        [150, 200]
+                    ];
+                    
+                    // Create a Delaunay triangulation
+                    const delaunay = d3.Delaunay.from(points);
+                    
+                    // Create a Voronoi diagram
+                    const voronoi = delaunay.voronoi([0, 0, 300, 300]);
+                    
+                    resultDiv.innerHTML += `<p style="color: green;">Delaunay and Voronoi are working correctly!</p>`;
+                    
+                    // Create a canvas to show the result
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 300;
+                    canvas.height = 300;
+                    resultDiv.appendChild(canvas);
+                    
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Draw cells
+                    ctx.strokeStyle = 'blue';
+                    ctx.lineWidth = 1;
+                    
+                    // Draw Voronoi cells
+                    for (let i = 0; i < points.length; i++) {
+                        const cell = voronoi.cellPolygon(i);
+                        if (cell) {
+                            ctx.beginPath();
+                            ctx.moveTo(cell[0][0], cell[0][1]);
+                            for (let j = 1; j < cell.length; j++) {
+                                ctx.lineTo(cell[j][0], cell[j][1]);
+                            }
+                            ctx.stroke();
+                        }
+                    }
+                    
+                    // Draw points
+                    ctx.fillStyle = 'red';
+                    for (const point of points) {
+                        ctx.beginPath();
+                        ctx.arc(point[0], point[1], 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                } catch (error) {
+                    resultDiv.innerHTML += `<p style="color: red;">Error testing Delaunay: ${error.message}</p>`;
+                }
+            } else {
+                resultDiv.innerHTML = `<p style="color: red;">D3.js is NOT loaded!</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

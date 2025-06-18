@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procedural Map Generator</title>    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #1a1a1a;
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+        }
+        canvas {
+            display: block;
+        }        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        #generateButton {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #generateButton:hover {
+            background: #45a049;
+        }
+        #templateSelector {
+            padding: 8px;
+            background: rgba(40, 40, 40, 0.9);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 200px;
+        }
+        #templateSelector option {
+            background: #282828;
+            color: white;
+        }
+        .template-description {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+        #zoomControls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 1000;
+        }
+        .zoomButton {
+            width: 40px;
+            height: 40px;
+            background: rgba(50, 50, 50, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .zoomButton:hover {
+            background: rgba(70, 70, 70, 0.9);
+        }
+        #resetZoomButton {
+            font-size: 14px;
+        }
+        #zoomLevel {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        #cellInfo {
+            display: none;
+            position: fixed;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 200px;
+        }
+        .info-row {
+            margin: 4px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #aaa;
+            margin-right: 8px;
+        }        .info-value {
+            color: #fff;
+        }
+        #loadingIndicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            z-index: 2000;
+            display: none;
+        }
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin: 10px auto 0;
+        }
+        #mapLegend {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        #legendTitle {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .legend-section {
+            margin-bottom: 15px;
+        }
+        .legend-section-title {
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 3px;
+        }
+        .legend-label {
+            font-size: 14px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>    <button id="generateButton">Generate New Map</button>
+    <div id="cellInfo"></div>
+    <div id="loadingIndicator">
+        <div>Generating map...</div>
+        <div class="spinner"></div>
+    </div><div id="mapLegend">
+        <div id="legendTitle">Map Legend</div>
+        <div id="legendItems"></div>
+        <div id="controls-tip" style="margin-top: 15px; font-size: 12px; color: #ccc; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+            <strong>Controls:</strong><br>
+            • Mouse wheel to zoom<br>
+            • Drag to pan<br>
+            • Arrow keys to pan<br>
+            • +/- keys to zoom<br>
+            • 0 to reset view
+        </div>
+    </div>
+    <div id="zoomControls">
+        <button id="zoomInButton" class="zoomButton" title="Zoom In">+</button>
+        <button id="zoomOutButton" class="zoomButton" title="Zoom Out">-</button>
+        <button id="resetZoomButton" class="zoomButton" title="Reset View">Reset</button>
+        <div id="zoomLevel">100%</div>
+    </div>
+    <canvas id="mapCanvas"></canvas>
+      <!-- External Libraries -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="utils/SimplexNoise.js"></script>
+      <!-- Core Modules -->
+    <script src="utils/NoiseGenerator.js"></script>
+    <script src="utils/VoronoiHelper.js"></script>
+    <script src="generators/VoronoiGenerator.js"></script>
+    <script src="generators/HeightmapTemplates.js"></script>
+    <script src="generators/HeightmapGenerator.js"></script>
+    <script src="generators/BiomeGenerator.js"></script>
+    <script src="generators/RiverGenerator.js"></script>
+    <script src="main.js"></script>
+      <!-- Initialize Map Generator -->
+    <script>
+        window.addEventListener('load', function() {
+            console.log("Page loaded, initializing map generator...");
+            try {
+                // Set initial canvas size
+                const canvas = document.getElementById('mapCanvas');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                
+                // Create map generator instance
+                window.mapGenerator = new MapGenerator();
+                console.log("Map generator created");
+                
+                // Show loading indicator during generation
+                const generateButton = document.getElementById('generateButton');
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                
+                generateButton.addEventListener('click', function() {
+                    console.log("Generate button clicked");
+                    loadingIndicator.style.display = 'block';
+                    
+                    // Use setTimeout to allow UI to update before heavy processing
+                    setTimeout(function() {
+                        try {
+                            console.log("Starting map generation...");
+                            window.mapGenerator.generateMap();
+                            console.log("Map generation complete");
+                        } catch (error) {
+                            console.error("Error during map generation:", error);
+                            alert("Error generating map: " + error.message);
+                        } finally {
+                            loadingIndicator.style.display = 'none';
+                        }
+                    }, 50);
+                });
+                  // Automatically generate the initial map
+                console.log("Automatically generating initial map...");
+                loadingIndicator.style.display = 'block';
+                setTimeout(function() {
+                    try {
+                        console.log("Starting map generation...");
+                        window.mapGenerator.generateMap();
+                        console.log("Map generation complete");
+                    } catch (error) {
+                        console.error("Error during map generation:", error);
+                        alert("Error generating map: " + error.message);
+                    } finally {
+                        loadingIndicator.style.display = 'none';
+                    }
+                }, 100);
+                } catch (error) {
+                console.error("Error initializing map generator:", error);
+                alert("Error initializing map generator: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

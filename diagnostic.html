@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Generator Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .warning {
+            color: orange;
+        }
+        .test-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Map Generator Diagnostic</h1>
+    
+    <!-- Libraries Test -->
+    <div class="test-section" id="libraries-test">
+        <div class="test-title">Libraries Test</div>
+        <div id="libraries-result">Running test...</div>
+    </div>
+    
+    <!-- Noise Generator Test -->
+    <div class="test-section" id="noise-test">
+        <div class="test-title">Noise Generator Test</div>
+        <button class="test-button" id="test-noise">Test Noise Generation</button>
+        <div id="noise-result">Click the button to test</div>
+        <canvas id="noise-canvas" width="200" height="200"></canvas>
+    </div>
+    
+    <!-- Voronoi Test -->
+    <div class="test-section" id="voronoi-test">
+        <div class="test-title">Voronoi Generator Test</div>
+        <button class="test-button" id="test-voronoi">Test Voronoi Generation</button>
+        <div id="voronoi-result">Click the button to test</div>
+        <canvas id="voronoi-canvas" width="400" height="300"></canvas>
+    </div>
+    
+    <!-- Heightmap Test -->
+    <div class="test-section" id="heightmap-test">
+        <div class="test-title">Heightmap Generator Test</div>
+        <button class="test-button" id="test-heightmap">Test Heightmap Generation</button>
+        <div id="heightmap-result">Click the button to test</div>
+        <canvas id="heightmap-canvas" width="400" height="300"></canvas>
+    </div>
+    
+    <!-- Biome Test -->
+    <div class="test-section" id="biome-test">
+        <div class="test-title">Biome Generator Test</div>
+        <button class="test-button" id="test-biome">Test Biome Generation</button>
+        <div id="biome-result">Click the button to test</div>
+        <canvas id="biome-canvas" width="400" height="300"></canvas>
+    </div>
+    
+    <!-- River Test -->
+    <div class="test-section" id="river-test">
+        <div class="test-title">River Generator Test</div>
+        <button class="test-button" id="test-river">Test River Generation</button>
+        <div id="river-result">Click the button to test</div>
+        <canvas id="river-canvas" width="400" height="300"></canvas>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="utils/SimplexNoise.js"></script>
+    <script src="utils/NoiseGenerator.js"></script>
+    <script src="utils/VoronoiHelper.js"></script>
+    <script src="generators/VoronoiGenerator.js"></script>
+    <script src="generators/HeightmapGenerator.js"></script>
+    <script src="generators/BiomeGenerator.js"></script>
+    <script src="generators/RiverGenerator.js"></script>
+    
+    <script>
+        // Test libraries
+        window.addEventListener('load', function() {
+            const librariesResult = document.getElementById('libraries-result');
+            let html = '';
+            
+            // Test D3.js
+            if (typeof d3 !== 'undefined') {
+                html += `<div class="success">✓ D3.js loaded (version ${d3.version})</div>`;
+            } else {
+                html += `<div class="error">✗ D3.js not loaded</div>`;
+            }
+            
+            // Test SimplexNoise
+            if (typeof createNoise2D === 'function') {
+                html += `<div class="success">✓ SimplexNoise loaded</div>`;
+            } else {
+                html += `<div class="error">✗ SimplexNoise not loaded</div>`;
+            }
+            
+            // Test NoiseGenerator
+            if (typeof NoiseGenerator === 'function') {
+                html += `<div class="success">✓ NoiseGenerator loaded</div>`;
+            } else {
+                html += `<div class="error">✗ NoiseGenerator not loaded</div>`;
+            }
+            
+            // Test VoronoiHelper
+            if (typeof VoronoiHelper === 'function') {
+                html += `<div class="success">✓ VoronoiHelper loaded</div>`;
+            } else {
+                html += `<div class="error">✗ VoronoiHelper not loaded</div>`;
+            }
+            
+            // Test VoronoiGenerator
+            if (typeof VoronoiGenerator === 'function') {
+                html += `<div class="success">✓ VoronoiGenerator loaded</div>`;
+            } else {
+                html += `<div class="error">✗ VoronoiGenerator not loaded</div>`;
+            }
+            
+            // Test HeightmapGenerator
+            if (typeof HeightmapGenerator === 'function') {
+                html += `<div class="success">✓ HeightmapGenerator loaded</div>`;
+            } else {
+                html += `<div class="error">✗ HeightmapGenerator not loaded</div>`;
+            }
+            
+            // Test BiomeGenerator
+            if (typeof BiomeGenerator === 'function') {
+                html += `<div class="success">✓ BiomeGenerator loaded</div>`;
+            } else {
+                html += `<div class="error">✗ BiomeGenerator not loaded</div>`;
+            }
+            
+            // Test RiverGenerator
+            if (typeof RiverGenerator === 'function') {
+                html += `<div class="success">✓ RiverGenerator loaded</div>`;
+            } else {
+                html += `<div class="error">✗ RiverGenerator not loaded</div>`;
+            }
+            
+            librariesResult.innerHTML = html;
+        });
+        
+        // Test Noise Generator
+        document.getElementById('test-noise').addEventListener('click', function() {
+            const resultDiv = document.getElementById('noise-result');
+            const canvas = document.getElementById('noise-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            resultDiv.innerHTML = 'Testing noise generation...';
+            
+            try {
+                // Create noise generator
+                const noiseGen = new NoiseGenerator(Math.random());
+                
+                // Generate noise
+                const width = canvas.width;
+                const height = canvas.height;
+                const imageData = ctx.createImageData(width, height);
+                
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const noiseValue = noiseGen.generate2D(x, y, 0.01, 3, 0.5, 2);
+                        const index = (y * width + x) * 4;
+                        const color = Math.floor(noiseValue * 255);
+                        
+                        imageData.data[index] = color;
+                        imageData.data[index + 1] = color;
+                        imageData.data[index + 2] = color;
+                        imageData.data[index + 3] = 255;
+                    }
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+                resultDiv.innerHTML = '<div class="success">Noise generation successful!</div>';
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                console.error('Noise test error:', error);
+            }
+        });
+        
+        // Test Voronoi Generator
+        document.getElementById('test-voronoi').addEventListener('click', function() {
+            const resultDiv = document.getElementById('voronoi-result');
+            const canvas = document.getElementById('voronoi-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            resultDiv.innerHTML = 'Testing Voronoi generation...';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            try {
+                // Create Voronoi generator (with small cell count for test)
+                const voronoiGen = new VoronoiGenerator(canvas.width, canvas.height, 100);
+                
+                // Generate cells
+                const cells = voronoiGen.generate();
+                
+                // Draw cells
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    
+                    // Random color for each cell
+                    ctx.fillStyle = `hsl(${Math.random() * 360}, 70%, 70%)`;
+                    
+                    // Draw cell
+                    ctx.beginPath();
+                    if (cell.vertices.length > 0) {
+                        ctx.moveTo(cell.vertices[0].x, cell.vertices[0].y);
+                        for (let j = 1; j < cell.vertices.length; j++) {
+                            ctx.lineTo(cell.vertices[j].x, cell.vertices[j].y);
+                        }
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'black';
+                    ctx.stroke();
+                }
+                
+                resultDiv.innerHTML = `<div class="success">Voronoi generation successful! Generated ${cells.length} cells.</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                console.error('Voronoi test error:', error);
+            }
+        });
+        
+        // Test Heightmap Generator
+        document.getElementById('test-heightmap').addEventListener('click', function() {
+            const resultDiv = document.getElementById('heightmap-result');
+            const canvas = document.getElementById('heightmap-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            resultDiv.innerHTML = 'Testing heightmap generation...';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            try {
+                // Create noise and Voronoi generators
+                const noiseGen = new NoiseGenerator(Math.random());
+                const voronoiGen = new VoronoiGenerator(canvas.width, canvas.height, 100);
+                
+                // Generate Voronoi cells
+                const cells = voronoiGen.generate();
+                
+                // Create heightmap generator
+                const heightmapGen = new HeightmapGenerator(noiseGen);
+                
+                // Generate heightmap
+                heightmapGen.generate(cells);
+                
+                // Draw cells colored by elevation
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    
+                    // Color based on elevation
+                    const elevation = cell.elevation;
+                    let color;
+                    
+                    if (elevation < 0.35) {
+                        // Water (blue)
+                        const blue = Math.floor(128 + elevation * 300);
+                        color = `rgb(0, 0, ${blue})`;
+                    } else if (elevation < 0.7) {
+                        // Land (green to yellow)
+                        const green = Math.floor(128 + (elevation - 0.35) * 200);
+                        color = `rgb(${elevation * 200}, ${green}, 0)`;
+                    } else {
+                        // Mountains (gray to white)
+                        const value = Math.floor(128 + (elevation - 0.7) * 400);
+                        color = `rgb(${value}, ${value}, ${value})`;
+                    }
+                    
+                    ctx.fillStyle = color;
+                    
+                    // Draw cell
+                    ctx.beginPath();
+                    if (cell.vertices.length > 0) {
+                        ctx.moveTo(cell.vertices[0].x, cell.vertices[0].y);
+                        for (let j = 1; j < cell.vertices.length; j++) {
+                            ctx.lineTo(cell.vertices[j].x, cell.vertices[j].y);
+                        }
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                resultDiv.innerHTML = `<div class="success">Heightmap generation successful!</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                console.error('Heightmap test error:', error);
+            }
+        });
+        
+        // Test Biome Generator
+        document.getElementById('test-biome').addEventListener('click', function() {
+            const resultDiv = document.getElementById('biome-result');
+            const canvas = document.getElementById('biome-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            resultDiv.innerHTML = 'Testing biome generation...';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            try {
+                // Create generators
+                const noiseGen = new NoiseGenerator(Math.random());
+                const voronoiGen = new VoronoiGenerator(canvas.width, canvas.height, 100);
+                const heightmapGen = new HeightmapGenerator(noiseGen);
+                const biomeGen = new BiomeGenerator(noiseGen);
+                
+                // Generate cells and heightmap
+                const cells = voronoiGen.generate();
+                heightmapGen.generate(cells);
+                
+                // Generate biomes
+                biomeGen.generate(cells);
+                
+                // Biome colors
+                const biomeColors = {
+                    desert: '#E4D7A8',
+                    savanna: '#BFB86E',
+                    tundra: '#E0E0D1',
+                    shrubland: '#C5C288',
+                    taiga: '#5A7357',
+                    grassland: '#A8C288',
+                    forest: '#4B7337',
+                    rainforest: '#2E6D40',
+                    deep: '#0A3875',
+                    ocean: '#1E50A0',
+                    shallow: '#71A5DE'
+                };
+                
+                // Draw cells colored by biome
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    
+                    // Color based on biome
+                    const biome = cell.biome || 'grassland';
+                    ctx.fillStyle = biomeColors[biome] || '#AAAAAA';
+                    
+                    // Draw cell
+                    ctx.beginPath();
+                    if (cell.vertices.length > 0) {
+                        ctx.moveTo(cell.vertices[0].x, cell.vertices[0].y);
+                        for (let j = 1; j < cell.vertices.length; j++) {
+                            ctx.lineTo(cell.vertices[j].x, cell.vertices[j].y);
+                        }
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                resultDiv.innerHTML = `<div class="success">Biome generation successful!</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                console.error('Biome test error:', error);
+            }
+        });
+        
+        // Test River Generator
+        document.getElementById('test-river').addEventListener('click', function() {
+            const resultDiv = document.getElementById('river-result');
+            const canvas = document.getElementById('river-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            resultDiv.innerHTML = 'Testing river generation...';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            try {
+                // Create generators
+                const noiseGen = new NoiseGenerator(Math.random());
+                const voronoiGen = new VoronoiGenerator(canvas.width, canvas.height, 300);
+                const heightmapGen = new HeightmapGenerator(noiseGen);
+                const biomeGen = new BiomeGenerator(noiseGen);
+                const riverGen = new RiverGenerator();
+                
+                // Generate cells, heightmap and biomes
+                const cells = voronoiGen.generate();
+                heightmapGen.generate(cells);
+                biomeGen.generate(cells);
+                
+                // Generate rivers
+                const rivers = riverGen.generate(cells, 10);
+                
+                // Draw basic terrain
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    
+                    // Simple elevation-based coloring
+                    if (cell.elevation < 0.35) {
+                        ctx.fillStyle = '#4781D3'; // Water
+                    } else if (cell.elevation > 0.7) {
+                        ctx.fillStyle = '#8A7A72'; // Mountains
+                    } else {
+                        ctx.fillStyle = '#A8C288'; // Land
+                    }
+                    
+                    // Draw cell
+                    ctx.beginPath();
+                    if (cell.vertices.length > 0) {
+                        ctx.moveTo(cell.vertices[0].x, cell.vertices[0].y);
+                        for (let j = 1; j < cell.vertices.length; j++) {
+                            ctx.lineTo(cell.vertices[j].x, cell.vertices[j].y);
+                        }
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                // Draw rivers
+                if (rivers && rivers.length > 0) {
+                    ctx.strokeStyle = '#3399FF';
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    for (let i = 0; i < rivers.length; i++) {
+                        const river = rivers[i];
+                        const points = river.points;
+                        
+                        if (!points || points.length < 2) continue;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(points[0].x, points[0].y);
+                        
+                        for (let j = 1; j < points.length; j++) {
+                            ctx.lineTo(points[j].x, points[j].y);
+                        }
+                        
+                        ctx.stroke();
+                    }
+                    
+                    resultDiv.innerHTML = `<div class="success">River generation successful! Created ${rivers.length} rivers.</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="warning">River generation completed, but no rivers were created.</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                console.error('River test error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
